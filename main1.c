@@ -2,16 +2,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 
 #define BUFFER_STR 100
 #define BUFFER_INT 20
 #define NUM 10
 
-typedef struct Work
+typedef union Work
 {
-    char *city;
-    char *street;
-    char *postOfficeCode;
+    char *work_address;
+    struct
+    {
+        char *city;
+        char *street;
+        char *postOfficeCode;
+    } WorkSeparated;
 } Work;
 
 typedef struct Data
@@ -41,9 +46,7 @@ void printForm(Citizens *citizens, int n)
         printf("Gender: %c\n", citizens[i].gender);
         printf("\tHome Address: %s\n", citizens[i].home_address);
         printf("Work Address:\n");
-        printf("\tCity: %s\n", citizens[i].work_address.city);
-        printf("\tStreet: %s\n", citizens[i].work_address.street);
-        printf("\tPost Office Code: %s\n", citizens[i].work_address.postOfficeCode);
+        printf("\t %s %s %s\n", citizens[i].work_address.WorkSeparated.city, citizens[i].work_address.WorkSeparated.street, citizens[i].work_address.WorkSeparated.postOfficeCode);
         printf("\n");
     }
 }
@@ -88,16 +91,18 @@ void printMenu3()
 
 void registerFormKeyboard(Citizens *citizens, int n)
 {
+    char buffer[BUFFER_STR];
+
     for (int i = 0; i < n; i++)
     {
         printf("Input your name: ");
-        citizens[i].name = (char *)malloc(sizeof(char) * BUFFER_STR);
-        scanf("%s", citizens[i].name);
+        scanf("%s", buffer);
+        citizens[i].name = strdup(buffer);
         printf("\n");
 
         printf("Input your surname: ");
-        citizens[i].surname = (char *)malloc(sizeof(char) * BUFFER_STR);
-        scanf("%s", citizens[i].surname);
+        scanf("%s", buffer);
+        citizens[i].surname = strdup(buffer);
         printf("\n");
 
         printf("Input your data of birth: \n");
@@ -118,25 +123,21 @@ void registerFormKeyboard(Citizens *citizens, int n)
         printf("\n");
 
         printf("Input your home address: ");
-        citizens[i].home_address = (char *)malloc(sizeof(char) * BUFFER_STR);
-        fgets(citizens[i].home_address, BUFFER_STR, stdin);
-        citizens[i].home_address[strlen(citizens[i].home_address - 1)] = '\0';
+        getchar();
+        fgets(buffer, BUFFER_STR, stdin);
+        buffer[strcspn(buffer, "\n")] = '\0';
+        citizens[i].home_address = strdup(buffer);
         printf("\n");
 
-        printf("Input your work address: \n");
+        printf("Input your Work address: \n");
         printf("City: ");
-        citizens[i].work_address.city = (char *)malloc(sizeof(char) * BUFFER_STR);
-        scanf("%s", citizens[i].work_address.city);
+        scanf("%s", citizens[i].work_address.WorkSeparated.city);
         printf("\n");
-
         printf("Street: ");
-        citizens[i].work_address.street = (char *)malloc(sizeof(char) * BUFFER_STR);
-        scanf("%s", citizens[i].work_address.street);
+        scanf("%s", citizens[i].work_address.WorkSeparated.street);
         printf("\n");
-
-        printf("Post office code: ");
-        citizens[i].work_address.postOfficeCode = (char *)malloc(sizeof(char) * BUFFER_STR);
-        scanf("%s", citizens[i].work_address.postOfficeCode);
+        printf("City: ");
+        scanf("%s", citizens[i].work_address.WorkSeparated.postOfficeCode);
         printf("\n");
     }
 }
@@ -165,7 +166,6 @@ void randomRegisterForm(Citizens *citizens, int n)
 
     for (int i = 0; i < n; i++)
     {
-
         citizens[i].name = (char *)malloc(sizeof(char) * BUFFER_STR);
         citizens[i].surname = (char *)malloc(sizeof(char) * BUFFER_STR);
 
@@ -181,13 +181,13 @@ void randomRegisterForm(Citizens *citizens, int n)
         citizens[i].home_address = (char *)malloc(sizeof(char) * BUFFER_STR);
         strcpy(citizens[i].home_address, randomHomeAddresses[rand() % NUM]);
 
-        citizens[i].work_address.city = (char *)malloc(sizeof(char) * BUFFER_STR);
-        citizens[i].work_address.street = (char *)malloc(sizeof(char) * BUFFER_STR);
-        citizens[i].work_address.postOfficeCode = (char *)malloc(sizeof(char) * BUFFER_STR);
+        citizens[i].work_address.WorkSeparated.city = (char *)malloc(sizeof(char) * BUFFER_STR);
+        citizens[i].work_address.WorkSeparated.street = (char *)malloc(sizeof(char) * BUFFER_STR);
+        citizens[i].work_address.WorkSeparated.postOfficeCode = (char *)malloc(sizeof(char) * BUFFER_STR);
 
-        strcpy(citizens[i].work_address.city, randomWorkAddresses[rand() % NUM]);
-        strcpy(citizens[i].work_address.street, randomWorkAddresses[rand() % NUM]);
-        strcpy(citizens[i].work_address.postOfficeCode, randomWorkAddresses[rand() % NUM]);
+        strcpy(citizens[i].work_address.WorkSeparated.city, randomWorkAddresses[rand() % NUM]);
+        strcpy(citizens[i].work_address.WorkSeparated.street, "");
+        strcpy(citizens[i].work_address.WorkSeparated.postOfficeCode, "");
     }
 }
 
@@ -196,13 +196,16 @@ void changeRegisterForm(Citizens *citizens, int n)
     int num;
     int sel = 1;
     char buffer[BUFFER_STR];
+
     printf("Input number of citizen: ");
     scanf("%d", &num);
+
     while (sel != 0)
     {
         printMenu3();
         printf("Select the field to change: ");
         scanf("%d", &sel);
+
         switch (sel)
         {
         case 0:
@@ -217,12 +220,12 @@ void changeRegisterForm(Citizens *citizens, int n)
         case 2:
             printf("Surname: ");
             free(citizens[num - 1].surname);
-            citizens[num - 1].surname = malloc(sizeof(char) * BUFFER_STR);
+            citizens[num - 1].surname = (char *)malloc(sizeof(char) * BUFFER_STR);
             scanf("%s", citizens[num - 1].surname);
             break;
         case 3:
             printf("Day Month Year: ");
-            scanf("%u %u %u", &citizens[num - 1].date_birth.day, &citizens[num - 1].date_birth.month, &citizens[num - 1].date_birth.year);
+            scanf("%d %d %d", &citizens[num - 1].date_birth.day, &citizens[num - 1].date_birth.month, &citizens[num - 1].date_birth.year);
             break;
         case 4:
             printf("Gender: ");
@@ -238,13 +241,13 @@ void changeRegisterForm(Citizens *citizens, int n)
             break;
         case 6:
             printf("Work Address (City Street PostCode): ");
-            free(citizens[num - 1].work_address.city);
-            free(citizens[num - 1].work_address.street);
-            free(citizens[num - 1].work_address.postOfficeCode);
-            citizens[num - 1].work_address.city = malloc(sizeof(char) * BUFFER_STR);
-            citizens[num - 1].work_address.street = malloc(sizeof(char) * BUFFER_STR);
-            citizens[num - 1].work_address.postOfficeCode = malloc(sizeof(char) * BUFFER_STR);
-            scanf("%s %s %s", citizens[num - 1].work_address.city, citizens[num - 1].work_address.street, citizens[num - 1].work_address.postOfficeCode);
+            free(citizens[num - 1].work_address.WorkSeparated.city);
+            free(citizens[num - 1].work_address.WorkSeparated.street);
+            free(citizens[num - 1].work_address.WorkSeparated.postOfficeCode);
+            citizens[num - 1].work_address.WorkSeparated.city = malloc(sizeof(char) * BUFFER_STR);
+            citizens[num - 1].work_address.WorkSeparated.street = malloc(sizeof(char) * BUFFER_STR);
+            citizens[num - 1].work_address.WorkSeparated.postOfficeCode = malloc(sizeof(char) * BUFFER_STR);
+            scanf("%s %s %s", citizens[num - 1].work_address.WorkSeparated.city, citizens[num - 1].work_address.WorkSeparated.street, citizens[num - 1].work_address.WorkSeparated.postOfficeCode);
             break;
         default:
             printf("Invalid option\n");
@@ -253,14 +256,33 @@ void changeRegisterForm(Citizens *citizens, int n)
     }
 }
 
+void uppercase(char *str)
+{
+    while (*str)
+    {
+        *str = toupper((unsigned char)*str);
+        str++;
+    }
+}
+
 int stringsCompare(const char *a, const char *b)
 {
-    return strcmp(a, b);
+    char uppercaseA[BUFFER_STR];
+    char uppercaseB[BUFFER_STR];
+
+    strcpy(uppercaseA, a);
+    strcpy(uppercaseB, b);
+
+    uppercase(uppercaseA);
+    uppercase(uppercaseB);
+
+    return strcmp(uppercaseA, uppercaseB);
 }
 
 void swapStructures(Citizens *citizen1_ptr, Citizens *citizen2_ptr)
 {
-    Citizens temp = *citizen1_ptr;
+    Citizens temp;
+    temp = *citizen1_ptr;
     *citizen1_ptr = *citizen2_ptr;
     *citizen2_ptr = temp;
 }
@@ -282,11 +304,11 @@ void bubble_sort(Citizens *citizens, int n)
 int partition(Citizens *citizens, int low, int high)
 {
     char pivot[BUFFER_STR];
-    strcpy(pivot, citizens[high].work_address.city);
+    strcpy(pivot, citizens[high].work_address.WorkSeparated.city);
     int i = low - 1;
     for (int j = low; j < high; j++)
     {
-        if (strcmp(citizens[j].work_address.city, pivot) >= 0)
+        if (strcmp(citizens[j].work_address.WorkSeparated.city, pivot) >= 0)
         {
             i++;
             swapStructures(&citizens[i], &citizens[j]);
@@ -314,9 +336,10 @@ Citizens *memoryMalloc(Citizens *citizens, int n)
         citizens[i].name = NULL;
         citizens[i].surname = NULL;
         citizens[i].home_address = NULL;
-        citizens[i].work_address.city = NULL;
-        citizens[i].work_address.street = NULL;
-        citizens[i].work_address.postOfficeCode = NULL;
+        citizens[i].work_address.work_address = NULL;
+        citizens[i].work_address.WorkSeparated.city = NULL;
+        citizens[i].work_address.WorkSeparated.street = NULL;
+        citizens[i].work_address.WorkSeparated.postOfficeCode = NULL;
     }
     return citizens;
 }
@@ -328,9 +351,10 @@ void memoryFree(Citizens *citizens, int n)
         free(citizens[i].name);
         free(citizens[i].surname);
         free(citizens[i].home_address);
-        free(citizens[i].work_address.city);
-        free(citizens[i].work_address.street);
-        free(citizens[i].work_address.postOfficeCode);
+        free(citizens[i].work_address.work_address);
+        free(citizens[i].work_address.WorkSeparated.city);
+        free(citizens[i].work_address.WorkSeparated.street);
+        free(citizens[i].work_address.WorkSeparated.postOfficeCode);
     }
     free(citizens);
 }
