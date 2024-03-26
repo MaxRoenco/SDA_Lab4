@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 
 #define BUFFER_STR 100
 #define BUFFER_INT 20
@@ -245,9 +246,27 @@ void changeRegisterForm(Citizens *citizens, int n)
     }
 }
 
+void uppercase(char *str)
+{
+    while (*str)
+    {
+        *str = toupper((unsigned char)*str);
+        str++;
+    }
+}
+
 int stringsCompare(const char *a, const char *b)
 {
-    return strcmp(a, b);
+    char uppercaseA[BUFFER_STR];
+    char uppercaseB[BUFFER_STR];
+
+    strcpy(uppercaseA, a);
+    strcpy(uppercaseB, b);
+
+    uppercase(uppercaseA);
+    uppercase(uppercaseB);
+
+    return strcmp(uppercaseA, uppercaseB);
 }
 
 void swapStructures(Citizens *citizen1_ptr, Citizens *citizen2_ptr)
